@@ -30,6 +30,8 @@ J = 0;
 Theta1_grad = zeros(size(Theta1));
 Theta2_grad = zeros(size(Theta2));
 
+
+
 % ====================== YOUR CODE HERE ======================
 % Instructions: You should complete the code by working through the
 %               following parts.
@@ -63,23 +65,69 @@ Theta2_grad = zeros(size(Theta2));
 %
 
 
+X = [ones(m, 1), X];
+z2 = X * Theta1';
+a2 = sigmoid(z2);
+
+a2 = [ones(rows(a2), 1), a2];
+a3 = sigmoid(a2 * Theta2');
 
 
+redefined_y = zeros(m, num_labels);
+result_matrix = eye(num_labels, num_labels);
+for i = 1:m,
+    redefined_y(i, :) = result_matrix(y(i), :);
+endfor
 
+for i = 1:m,
+    for k = 1:num_labels,
+	     J += 1 / m * (- redefined_y(i, k) * log(a3(i, k)) - (1 - redefined_y(i, k)) * log(1 - a3(i, k)));
+	endfor
+endfor
 
+for i = 1:hidden_layer_size,
+     for j = 2:(input_layer_size + 1),
+	     J += lambda / (2 * m) * (Theta1(i, j))^2;
+	 endfor
+endfor
 
+for i = 1:num_labels,
+     for j = 2:(hidden_layer_size + 1),
+	     J += lambda / (2 * m) * (Theta2(i, j))^2;
+	 endfor
+endfor
 
+big_delta_2 = zeros(columns(a3), columns(a2));
+big_delta_1 = zeros(columns(a2) - 1, columns(X));
 
+for t = 1:m,
+     a3_sample = a3(t, :)(:);
+	 a2_sample = a2(t, :)(:);
+	 a1_sample = X(t, :)(:);
+	 z2_sample = z2(t, :)(:);
+	 z2_sample = [1; z2_sample];
+	 y_sample = redefined_y(t, :)(:);
+     delta_3 = a3_sample - y_sample;
+	 delta_2 = Theta2' * (delta_3) .* sigmoidGradient(z2_sample);
+	 delta_2 = delta_2(2:end);
+	 big_delta_2 += delta_3 * (a2_sample');
+	 big_delta_1 += delta_2 * (a1_sample');
+endfor
 
+Theta1_grad = big_delta_1 / m;
+Theta2_grad = big_delta_2 / m;
 
+for i = 1:rows(Theta1_grad),
+     for j = 2:columns(Theta1_grad),
+         Theta1_grad(i, j) += Theta1(i, j) * lambda / m;
+     endfor
+endfor	 
 
-
-
-
-
-
-
-
+for i = 1:rows(Theta2_grad),
+     for j = 2:columns(Theta2_grad),
+         Theta2_grad(i, j) += Theta2(i, j) * lambda / m;
+     endfor
+endfor
 % -------------------------------------------------------------
 
 % =========================================================================
